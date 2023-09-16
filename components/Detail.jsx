@@ -1,106 +1,125 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
 import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
 
 const DetailScreen = ({ route }) => {
   const { countryName } = route.params;
   const [countryDetails, setCountryDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigation = useNavigation(); 
 
   useEffect(() => {
-    loadCountryDetails();
-  }, []);
+    const fetchCountryDetails = async () => {
+      try {
+        const response = await axios.get(
+          `https://restcountries.com/v3.1/name/${countryName}?fullText=true`
+        );
+        const countryData = response.data[0];
+        setCountryDetails(countryData);
+      } catch (error) {
+        console.error('Erro ao carregar detalhes do país:', error);
+      }
+    };
 
-  const loadCountryDetails = async () => {
-    try {
-      const response = await axios.get(`https://restcountries.com/v3.1/name/${countryName}`);
-      const details = response.data[0];
-      setCountryDetails(details);
-    } catch (error) {
-      console.error('Erro ao carregar os detalhes do país:', error);
-    } finally {
-      setIsLoading(false);
+    fetchCountryDetails();
+  }, [countryName]);
+
+  const formatCurrencies = () => {
+    if (countryDetails && countryDetails.currencies) {
+      const currenciesArray = Object.values(countryDetails.currencies).map(
+        (currency) => {
+          if (typeof currency === 'string') {
+            return currency;
+          } else if (currency.name) {
+            return currency.name;
+          } else {
+            return 'N/A';
+          }
+        }
+      );
+
+      return currenciesArray.join(', ');
+    } else {
+      return 'N/A';
     }
   };
 
-  if (isLoading) {
-    return <ActivityIndicator />;
-  }
-
   return (
-    <View style={styles.container}>
-      <Image
-        source={{ uri: countryDetails.flags[0] }}
-        style={styles.image}
-        onError={() => console.log('A imagem não foi carregada')}
-      />
-      <Text style={styles.name}>{countryDetails.name.common}</Text>
-      <Text style={styles.capital}>Capital: {countryDetails.capital}</Text>
-      <Text style={styles.population}>População: {countryDetails.population.toLocaleString()}</Text>
-      <Text style={styles.area}>Área: {countryDetails.area} sq km</Text>
-      <Text style={styles.title}>Linguagem:</Text>
-      <FlatList
-        data={Object.keys(countryDetails.languages)}
-        keyExtractor={(item) => item}
-        renderItem={({ item }) => (
-          <Text style={styles.value}>{item}</Text>
-        )}
-      />
-      <Text style={styles.title}>Moedas:</Text>
-      <FlatList
-        data={Object.keys(countryDetails.currencies)}
-        keyExtractor={(item) => item}
-        renderItem={({ item }) => (
-          <Text style={styles.value}>{item}</Text>
-        )}
-      />
-    </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      {countryDetails && (
+        <>
+          <Image
+            source={{ uri: countryDetails.flags.png }}
+            style={styles.flag}
+            resizeMode="contain"
+          />
+          <Text style={styles.name}>{countryDetails.name.common}</Text>
+          <View style={styles.detail}>
+            <Text style={styles.detailLabel}>Capital:</Text>
+            <Text style={styles.detailText}>
+              {countryDetails.capital ? countryDetails.capital[0] : 'N/A'}
+            </Text>
+          </View>
+          <View style={styles.detail}>
+            <Text style={styles.detailLabel}>Região:</Text>
+            <Text style={styles.detailText}>{countryDetails.region}</Text>
+          </View>
+          <View style={styles.detail}>
+            <Text style={styles.detailLabel}>Área:</Text>
+            <Text style={styles.detailText}>
+              {countryDetails.area} km²
+            </Text>
+          </View>
+          <View style={styles.detail}>
+            <Text style={styles.detailLabel}>População:</Text>
+            <Text style={styles.detailText}>
+              {countryDetails.population
+                ? countryDetails.population.toLocaleString()
+                : 'N/A'}
+            </Text>
+          </View>
+          <View style={styles.detail}>
+            <Text style={styles.detailLabel}>Linguagens:</Text>
+            <Text style={styles.detailText}>
+              {countryDetails.languages
+                ? Object.values(countryDetails.languages).join(', ')
+                : 'N/A'}
+            </Text>
+          </View>
+          <View style={styles.detail}>
+            <Text style={styles.detailLabel}>Moedas:</Text>
+            <Text style={styles.detailText}>{formatCurrencies()}</Text>
+          </View>
+        </>
+      )}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    alignItems: 'center',
+    paddingVertical: 20,
   },
-  image: {
+  flag: {
     width: 200,
     height: 120,
-    resizeMode: 'cover',
-    alignSelf: 'center',
+    marginBottom: 20,
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 10,
-  },
-  capital: {
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  population: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  area: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  value: {
-    fontSize: 14,
     marginBottom: 10,
-    textAlign: 'center',
-    
+  },
+  detail: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  detailLabel: {
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  detailText: {
+    fontSize: 16,
   },
 });
 

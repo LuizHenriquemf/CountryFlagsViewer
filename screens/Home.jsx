@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import SvgUri from 'react-native-svg-uri';
-
 
 const HomeScreen = () => {
   const [countries, setCountries] = useState([]);
@@ -21,7 +19,7 @@ const HomeScreen = () => {
 
     try {
       const response = await axios.get(
-        `https://restcountries.com/v3.1/all?fields=name,flags,population,capital`
+        `https://restcountries.com/v3.1/all?fields=name,flags,region,area`
       );
       const newCountries = response.data;
 
@@ -47,40 +45,37 @@ const HomeScreen = () => {
     navigation.navigate('Detail', { countryName });
   };
 
-  const renderCard = ({ item }) => {
-    const { flags, name, population, capital } = item;
   
+  const handleFormButtonClick = () => {
+    navigation.navigate('Form');
+  };
+
+  const renderCard = ({ item }) => {
+    const { flags, name, region, area } = item;
+
     return (
       <TouchableOpacity onPress={() => handleCountryClick(name.common)}>
         <View style={styles.card}>
-          {flags && flags.svg ? (
-            <SvgUri
-              width="80"
-              height="50"
-              source={{ uri: flags.svg }}
-              onError={() => console.log('A imagem não foi carregada')}
-            />
-          ) : null}
+          <Image
+            source={{ uri: flags.png }}
+            style={styles.image}
+            onError={() => console.log('A imagem não foi carregada')}
+          />
           <View style={styles.cardContent}>
             <Text style={styles.name}>{name.common}</Text>
             <View style={styles.infoContainer}>
-              <Text style={styles.infoLabel}>População:</Text>
-              <Text style={styles.infoText}>
-                {population ? population.toLocaleString() : 'N/A'}
-              </Text>
+              <Text style={styles.infoLabel}>Região:</Text>
+              <Text style={styles.infoText}>{region}</Text>
             </View>
             <View style={styles.infoContainer}>
-              <Text style={styles.infoLabel}>Capital:</Text>
-              <Text style={styles.infoText}>
-                {capital ? capital[0] : 'N/A'}
-              </Text>
+              <Text style={styles.infoLabel}>Área:</Text>
+              <Text style={styles.infoText}>{area} km²</Text>
             </View>
           </View>
         </View>
       </TouchableOpacity>
     );
   };
-  
 
   return (
     <View style={styles.container}>
@@ -97,6 +92,11 @@ const HomeScreen = () => {
             style={styles.flatList}
         />
       )}
+      <TouchableOpacity onPress={handleFormButtonClick}>
+        <View style={styles.buttonContainer}>
+          <Text style={styles.buttonText}>Preencher Formulário</Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -149,6 +149,18 @@ const styles = StyleSheet.create({
   },
   flatList: {
     marginVertical: 16,
+  },
+  buttonContainer: {
+    backgroundColor: 'blue',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
