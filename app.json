@@ -20,11 +20,14 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "networkSecurityConfig": "path/to/network_security_config.xml"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     }
+
+    
   }
 }

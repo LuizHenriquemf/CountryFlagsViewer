@@ -1,22 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 
 const HomeScreen = () => {
   const [countries, setCountries] = useState([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadCountries();
-  }, []);
+  }, [page]);
 
   const loadCountries = async () => {
-    try {
-      const response = await axios.get('https://restcountries.com/v3.1/all');
-      const countriesData = response.data;
+    setIsLoading(true);
 
-      setCountries(countriesData);
+    try {
+      const response = await axios.get(
+        `https://restcountries.com/v3.1/all?page=${page}&pageSize=10`
+      );
+      const newCountries = response.data;
+
+      setCountries((prevCountries) => [...prevCountries, ...newCountries]);
+      setError(null);
     } catch (error) {
-      console.error('Error loading countries:', error);
+      console.error('Erro ao carregar países:', error);
+      setError('Erro ao carregar países. Por favor, tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMoreCountries = () => {
+    if (!isLoading) {
+      setPage(page + 1);
     }
   };
 
@@ -25,24 +42,34 @@ const HomeScreen = () => {
       <Image
         source={{ uri: item.flags[0] }}
         style={styles.image}
+        onError={() => console.log('A imagem não foi carregada')}
       />
       <View>
         <Text style={styles.name}>{item.name.common}</Text>
         <Text style={styles.population}>
-          Population: {item.population.toLocaleString()}
+          Population: {item.population ? item.population.toLocaleString() : 'N/A'}
         </Text>
-        {/* Adicione outras informações aqui */}
+        <Text style={styles.capital}>
+        Capital: {item.capital ? item.capital[0] : 'N/A'}
+      </Text>
       </View>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={countries}
-        keyExtractor={(item) => item.cca2}
-        renderItem={renderItem}
-      />
+      {error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        <FlatList
+          data={countries}
+          keyExtractor={(item) => item.cca2}
+          renderItem={renderItem}
+          onEndReached={loadMoreCountries}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={isLoading && <ActivityIndicator />}
+        />
+      )}
     </View>
   );
 };
@@ -71,6 +98,11 @@ const styles = StyleSheet.create({
   },
   population: {
     fontSize: 14,
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
+    textAlign: 'center',
   },
 });
 
