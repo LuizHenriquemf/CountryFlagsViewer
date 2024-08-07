@@ -1,4 +1,4 @@
-# trabalhoDevMoveis
+# CountryFlagsViewer
 
 Este é um projeto React Native desenvolvido como parte de um trabalho acadêmico para a matéria de Desenvolvimento Móvel. O aplicativo exibe uma listagem de bandeiras de países e permite ao usuário visualizar detalhes sobre cada país ao clicar em uma bandeira.
 
